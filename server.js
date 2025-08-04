@@ -7,21 +7,23 @@ const chromium = require('chrome-aws-lambda');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ✅ Register CORS middleware FIRST
-app.use(cors({
-  origin: [
-    'https://preview--admin-page.lovable.app',
-    'https://admin-page.lovable.app'
-  ],
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type'],
-}));
-
-// ✅ Ensure body parsing comes after CORS
+// ✅ CORS middleware (general)
+app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' }));
 
-// ✅ Respond to preflight OPTIONS
-app.options('*', (req, res) => {
+// ✅ Manual headers for all requests
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "https://preview--admin-page.lovable.app");
+  res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  next();
+});
+
+// ✅ Manual preflight handler
+app.options("*", (req, res) => {
+  res.header("Access-Control-Allow-Origin", "https://preview--admin-page.lovable.app");
+  res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
   res.sendStatus(200);
 });
 
@@ -46,9 +48,11 @@ app.post('/generate-pdf', async (req, res) => {
 
     await browser.close();
 
+    // ✅ Explicitly set response headers
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': 'inline; filename="report.pdf"',
+      'Access-Control-Allow-Origin': 'https://preview--admin-page.lovable.app'
     });
 
     res.send(pdfBuffer);
