@@ -7,9 +7,22 @@ const chromium = require('chrome-aws-lambda');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ✅ CORS configuration
 app.use(cors({
-  origin: ['https://preview--admin-page.lovable.app', 'https://admin-page.lovable.app']
+  origin: [
+    'https://preview--admin-page.lovable.app',
+    'https://admin-page.lovable.app'
+  ],
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type'],
+  credentials: true
 }));
+
+// ✅ Handle preflight OPTIONS request
+app.options('/generate-pdf', (req, res) => {
+  res.sendStatus(200);
+});
+
 app.use(bodyParser.json({ limit: '10mb' }));
 
 app.post('/generate-pdf', async (req, res) => {
