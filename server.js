@@ -7,7 +7,7 @@ const chromium = require('chrome-aws-lambda');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ✅ CORS configuration
+// ✅ Register CORS middleware FIRST
 app.use(cors({
   origin: [
     'https://preview--admin-page.lovable.app',
@@ -15,15 +15,15 @@ app.use(cors({
   ],
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type'],
-  credentials: true
 }));
 
-// ✅ Handle preflight OPTIONS request
-app.options('/generate-pdf', (req, res) => {
+// ✅ Ensure body parsing comes after CORS
+app.use(bodyParser.json({ limit: '10mb' }));
+
+// ✅ Respond to preflight OPTIONS
+app.options('*', (req, res) => {
   res.sendStatus(200);
 });
-
-app.use(bodyParser.json({ limit: '10mb' }));
 
 app.post('/generate-pdf', async (req, res) => {
   const { html } = req.body;
@@ -53,7 +53,7 @@ app.post('/generate-pdf', async (req, res) => {
 
     res.send(pdfBuffer);
   } catch (err) {
-    console.error(err);
+    console.error('[PDF ERROR]', err);
     res.status(500).send('Failed to generate PDF');
   }
 });
